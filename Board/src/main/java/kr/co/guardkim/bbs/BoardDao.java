@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 
 public class BoardDao {
 
@@ -72,5 +73,47 @@ public class BoardDao {
 		}
 		return -1; //데이터베이스 오류
 	}
+	
+	//게시글 리스트 메소드
+		public ArrayList<BoardVo> getList(int pageNumber){
+//			String sql = "select * from bbs where boardId < ? and boardAvailable = 1 order by boardId desc limit 10";
+			String sql = "select * from bbs";
+			ArrayList<BoardVo> list = new ArrayList<BoardVo>();
+			try {
+				PreparedStatement pstmt = conn.prepareStatement(sql);
+				pstmt.setInt(1, getNext() - (pageNumber - 1) * 10);
+				rs = pstmt.executeQuery();
+				while(rs.next()) {
+					BoardVo bbs = new BoardVo();
+	
+					bbs.setBoardId(rs.getInt(1));
+					bbs.setBoardTitle(rs.getString(2));
+					bbs.setUserId(rs.getString(3));
+					bbs.setBoardDate(rs.getString(4));
+					bbs.setBoardContent(rs.getString(5));
+					bbs.setBoardAvailable(rs.getInt(6));
+					list.add(bbs);
+				}
+			}catch (Exception e) {
+				e.printStackTrace();
+			}
+			return list;
+		}
+		
+		//페이징 처리 메소드
+		public boolean nextPage(int pageNumber) {
+			String sql = "select * from bbs where boardId < ? and boardAvailable = 1";
+			try {
+				PreparedStatement pstmt = conn.prepareStatement(sql);
+				pstmt.setInt(1, getNext() - (pageNumber - 1) * 10);
+				rs = pstmt.executeQuery();
+				if(rs.next()) {
+					return true;
+				}
+			}catch (Exception e) {
+				e.printStackTrace();
+			}
+			return false;
+		}
 	
 }
