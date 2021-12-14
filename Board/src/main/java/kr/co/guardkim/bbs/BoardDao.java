@@ -9,7 +9,7 @@ import java.util.ArrayList;
 public class BoardDao {
 
 	private Connection conn;
-	private ResultSet rs;
+	private ResultSet rs; // executeQuery(String sql)을 통해 쿼리 실행하면 ResultSet타입으로 반환을 해주어 결과값을 저장할 수 있다.
 	
 	//기본 생성자
 	public BoardDao() {
@@ -26,7 +26,10 @@ public class BoardDao {
 
 	//작성일자 메소드
 	public String getDate() {
-		String sql = "select now()";
+//		String sql = "SELECT TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS') FROM DUAL";
+//		String sql = "SELECT TO_DATE(SYSDATE, 'YYYY-MM-DD HH24:MI:SS') FROM DUAL";
+//		String sql = "SELECT SYSDATE FROM DUAL";
+		String sql = "SELECT NOW()";
 		try {
 			PreparedStatement pstmt = conn.prepareStatement(sql);
 			rs = pstmt.executeQuery();
@@ -58,15 +61,17 @@ public class BoardDao {
 	
 	//글쓰기 메소드
 	public int write(String bbsTitle, String userId, String bbsContent) {
-		String sql = "insert into bbs values(?, ?, ?, ?, ?, ?)";
+		String sql = "insert into bbs values(?, ?, ?, TO_DATE(SYSDATE, 'YYYY-MM-DD HH24:MI:SS'), ?, ?)";
+//		String sql = "insert into bbs values(?, ?, ?, ?, ?, ?)";
+//		String sql = "insert into bbs values(?, ?, ?, SYSDATE, ?, ?)";
 		try {
 			PreparedStatement pstmt = conn.prepareStatement(sql);
 			pstmt.setInt(1, getNext());
 			pstmt.setString(2, bbsTitle);
 			pstmt.setString(3, userId);
-			pstmt.setString(4, getDate());
-			pstmt.setString(5, bbsContent);
-			pstmt.setInt(6, 1); //글의 유효번호
+//			pstmt.setString(4, getDate()); //////// 주석 처리
+			pstmt.setString(4, bbsContent);
+			pstmt.setInt(5, 1); //글의 유효번호
 			return pstmt.executeUpdate();
 		}catch (Exception e) {
 			e.printStackTrace();
@@ -77,7 +82,8 @@ public class BoardDao {
 	//게시글 리스트 메소드
 		public ArrayList<BoardVo> getList(int pageNumber){
 //			String sql = "select * from bbs where boardId < ? and boardAvailable = 1 order by boardId desc limit 10";
-			String sql = "select * from bbs";
+			String sql = "select * from bbs where boardAvailable=1 order by boardId";
+//			String sql = "select * from bbs order by boardId";
 			ArrayList<BoardVo> list = new ArrayList<BoardVo>();
 			try {
 				PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -85,7 +91,6 @@ public class BoardDao {
 				rs = pstmt.executeQuery();
 				while(rs.next()) {
 					BoardVo bbs = new BoardVo();
-	
 					bbs.setBoardId(rs.getInt(1));
 					bbs.setBoardTitle(rs.getString(2));
 					bbs.setUserId(rs.getString(3));
